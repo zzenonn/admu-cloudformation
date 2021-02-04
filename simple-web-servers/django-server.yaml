@@ -84,8 +84,8 @@ Resources:
     Properties:
       GroupId: !GetAtt DbSecurityGroup.GroupId
       IpProtocol: tcp
-      FromPort: 5432
-      ToPort: 5432
+      FromPort: 3306
+      ToPort: 3306
       SourceSecurityGroupId: !GetAtt InstanceSecurityGroup.GroupId
       
   InstanceSecurityGroup:
@@ -118,7 +118,7 @@ Resources:
     Properties:
       MasterUsername: !Ref DbUser
       MasterUserPassword: !Ref DbPassword
-      DBClusterIdentifier: demo-psql
+      DBClusterIdentifier: demo-mysql
       Engine: aurora-mysql
       EngineVersion: "5.7.mysql_aurora.2.08.0"
       EngineMode: serverless
@@ -157,38 +157,12 @@ Resources:
     Metadata:
       AWS::CloudFormation::Init:
         configSets:
-          MongoThenNode:
-            - "mongodb"
-            - "devtools"
-        mongodb:
-          files:
-            /etc/yum.repos.d/mongodb-enterprise.repo:
-              content: |
-                [mongodb-enterprise]
-                name=MongoDB Enterprise Repository
-                baseurl=https://repo.mongodb.com/yum/amazon/2/mongodb-enterprise/4.0/$basearch/
-                gpgcheck=1
-                enabled=1
-                gpgkey=https://www.mongodb.org/static/pgp/server-4.0.asc
-              mode: "000644"
-              owner: "root"
-              group: "root"
+          django:
+            - "django-dependencies"
+        django-dependencies:
           commands:
-            updateRepo:
-              command: yum update -y
-            installMongo:
-              command: yum install mongodb-enterprise -y
-              test: test -e /etc/yum.repos.d/mongodb-enterprise.repo
-          services:
-            sysvinit:
-              mongod:
-                enabled: "true"
-                ensureRunning: "true"
-        devtools:
-          packages:
-            yum:
-              git: []
-              postgresql: []
+            installDependencies:
+              command: yum update -y && yum install -y python3-devel mysql mysql-devel gcc
     CreationPolicy:
       ResourceSignal:
         Count: 1
@@ -214,7 +188,7 @@ Resources:
             #!/bin/bash -xe
             yum update -y
             # Install the files and packages from the metadata
-            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource BastionHost --configsets MongoThenNode --region ${AWS::Region}
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource BastionHost --configsets django --region ${AWS::Region}
             # Signal the status from cfn-init
             /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource BastionHost --region ${AWS::Region}
             
