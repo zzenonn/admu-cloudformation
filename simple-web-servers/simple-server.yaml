@@ -24,15 +24,6 @@ Parameters:
     Description: Port used by web server
     Type: Number
     Default: 8000
-  DbUser:
-    Type: String
-    Description: Username for the database superuser
-    Default: student
-  DbPassword:
-    Type: String
-    Description: Password for the database superuser
-    Default: Pa55w0rd
-    NoEcho: true
   LatestAmazonLinuxAmiId:
     Type : String
     Default: 'ami-047a51fa27710816e'
@@ -58,10 +49,6 @@ Metadata:
           - DbPassword
 
     ParameterLabels:
-      DbUsername:
-        default: Database Username
-      DbPassword:
-        default: Database Password
       ProjectName:
         default: Project Name
       Environment:
@@ -72,21 +59,6 @@ Metadata:
         default: Web Server Port
 
 Resources:
-
-  DbSecurityGroup:
-    Type: 'AWS::EC2::SecurityGroup'
-    Properties:
-      GroupName: !Sub ${ProjectName}-${Environment}-DbSg
-      GroupDescription: Allow postgres access only from within the security group
-
-  SGDbIngress1:
-    Type: 'AWS::EC2::SecurityGroupIngress'
-    Properties:
-      GroupId: !GetAtt DbSecurityGroup.GroupId
-      IpProtocol: tcp
-      FromPort: 3306
-      ToPort: 3306
-      SourceSecurityGroupId: !GetAtt InstanceSecurityGroup.GroupId
       
   InstanceSecurityGroup:
     Type: 'AWS::EC2::SecurityGroup'
@@ -111,24 +83,6 @@ Resources:
       FromPort: 22
       ToPort: 22
       CidrIp: "0.0.0.0/0"
-
-  RDSCluster:
-    Type: 'AWS::RDS::DBCluster'
-    DeletionPolicy: Delete
-    Properties:
-      MasterUsername: !Ref DbUser
-      MasterUserPassword: !Ref DbPassword
-      DBClusterIdentifier: demo-mysql
-      Engine: aurora-mysql
-      EngineVersion: "5.7.mysql_aurora.2.08.0"
-      EngineMode: serverless
-      ScalingConfiguration:
-        AutoPause: true
-        MinCapacity: 2
-        MaxCapacity: 4
-        SecondsUntilAutoPause: 1800
-      VpcSecurityGroupIds:
-        - !GetAtt DbSecurityGroup.GroupId
 
   BastionRole:
     Type: AWS::IAM::Role
@@ -194,9 +148,6 @@ Resources:
             
 
 Outputs:
-
-  DatabaseEndpoint:
-    Value: !GetAtt RDSCluster.Endpoint.Address
   
   Ec2InstanceDns:
     Value: !GetAtt BastionHost.PublicDnsName
