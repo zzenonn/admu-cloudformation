@@ -34,8 +34,8 @@ Parameters:
     Default: Pa55w0rd
     NoEcho: true
   LatestAmazonLinuxAmiId:
-    Type : String
-    Default: 'ami-047a51fa27710816e'
+    Type : 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
     
 Metadata:
   AWS::CloudFormation::Interface:
