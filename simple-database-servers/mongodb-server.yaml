@@ -52,9 +52,9 @@ Resources:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       GroupName: !Sub ${ProjectName}-${Environment}-InstanceSg
-      GroupDescription: Allow postgres access only from within the security group
+      GroupDescription: Allow MongoDB access only from within the security group
       
-  SgInstanceIngress:
+  SgInstanceIngress1:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       GroupId: !GetAtt InstanceSecurityGroup.GroupId
@@ -62,6 +62,15 @@ Resources:
       FromPort: 22
       ToPort: 22
       CidrIp: "0.0.0.0/0"
+
+  SgInstanceIngress2:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !GetAtt InstanceSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+      SourceSecurityGroupId: !GetAtt InstanceSecurityGroup.GroupId
 
   # BastionRole:
   #   Type: AWS::IAM::Role
