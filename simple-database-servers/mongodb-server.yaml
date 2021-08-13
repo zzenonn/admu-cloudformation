@@ -169,3 +169,6 @@ Outputs:
   
   Ec2InstanceDns:
     Value: !GetAtt MongoServer.PublicDnsName
+
+  Ec2InstancePrivateIp:
+    Value: !GetAtt MongoServer.PrivateIp

@@ -127,3 +127,6 @@ Outputs:
   
   Ec2InstanceDns:
     Value: !GetAtt BastionHost.PublicDnsName
+
+  Ec2InstancePrivateIp:
+    Value: !GetAtt BastionHost.PrivateIp
