@@ -88,14 +88,14 @@ Resources:
   #     ManagedPolicyArns:
   #       - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
 
-  DevEnvironment:
-    Type: AWS::Cloud9::EnvironmentEC2
-    Properties: 
-      AutomaticStopTimeMinutes: 120
-      Description: "Development IDE for Cloud 9"
-      ImageId: "ubuntu-18.04-x86_64"
-      InstanceType: "t2.micro"
-      Name: "DevEnvironment"
+  # DevEnvironment:
+  #   Type: AWS::Cloud9::EnvironmentEC2
+  #   Properties: 
+  #     AutomaticStopTimeMinutes: 120
+  #     Description: "Development IDE for Cloud 9"
+  #     ImageId: "ubuntu-18.04-x86_64"
+  #     InstanceType: "t2.micro"
+  #     Name: "DevEnvironment"
 
 
   BastionInstanceProfile:
