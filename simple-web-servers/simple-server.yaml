@@ -7,7 +7,7 @@ Parameters:
   ProjectName:
     Description: Project Name to identify stack and infrastructure
     Type: String
-    Default: WebServer
+    Default: MongoDb
   Environment:
     Description: Environment to deploy the Stack
     Type: String
@@ -20,10 +20,6 @@ Parameters:
   KeyPair:
     Description: Key used to SSH into the instance.
     Type: AWS::EC2::KeyPair::KeyName
-  WebPort:
-    Description: Port used by web server
-    Type: Number
-    Default: 8000
   LatestAmazonLinuxAmiId:
     Type : 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
     Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
@@ -40,7 +36,6 @@ Metadata:
           default: Server Details
         Parameters:
           - KeyPair
-          - WebPort
           - LatestAmazonLinuxAmiId
 
     ParameterLabels:
@@ -50,8 +45,6 @@ Metadata:
         default: Environment
       KeyPair:
         default: SSH Key Pair
-      WebPort:
-        default: Web Server Port
 
 Resources:
       
@@ -59,18 +52,9 @@ Resources:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
       GroupName: !Sub ${ProjectName}-${Environment}-InstanceSg
-      GroupDescription: Allow postgres access only from within the security group
-
-  SgInstanceIngress1:
-    Type: 'AWS::EC2::SecurityGroupIngress'
-    Properties:
-      GroupId: !GetAtt InstanceSecurityGroup.GroupId
-      IpProtocol: tcp
-      FromPort: !Ref WebPort
-      ToPort: !Ref WebPort
-      CidrIp: "0.0.0.0/0"
+      GroupDescription: Allow MongoDB access only from within the security group
       
-  SgInstanceIngress2:
+  SgInstanceIngress1:
     Type: 'AWS::EC2::SecurityGroupIngress'
     Properties:
       GroupId: !GetAtt InstanceSecurityGroup.GroupId
@@ -79,28 +63,46 @@ Resources:
       ToPort: 22
       CidrIp: "0.0.0.0/0"
 
-  BastionRole:
-    Type: AWS::IAM::Role
+  SgInstanceIngress2:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !GetAtt InstanceSecurityGroup.GroupId
+      IpProtocol: tcp
+      FromPort: 0
+      ToPort: 65535
+      SourceSecurityGroupId: !GetAtt InstanceSecurityGroup.GroupId
+
+  # BastionRole:
+  #   Type: AWS::IAM::Role
+  #   Properties: 
+  #     AssumeRolePolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #       - Effect: Allow
+  #         Principal:
+  #           Service:
+  #           - ec2.amazonaws.com
+  #         Action:
+  #         - sts:AssumeRole
+  #     Path: !Sub /${ProjectName}/instances/
+  #     ManagedPolicyArns:
+  #       - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+
+  DevEnvironment:
+    Type: AWS::Cloud9::EnvironmentEC2
     Properties: 
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Effect: Allow
-          Principal:
-            Service:
-            - ec2.amazonaws.com
-          Action:
-          - sts:AssumeRole
-      Path: !Sub /${ProjectName}/instances/
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
+      AutomaticStopTimeMinutes: 120
+      Description: "Development IDE for Cloud 9"
+      ImageId: "ubuntu-18.04-x86_64"
+      InstanceType: "t2.micro"
+      Name: "DevEnvironment"
+
 
   BastionInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties: 
       Roles:
-        - !Ref BastionRole
-
+        - LabRole
   BastionHost: 
     Type: "AWS::EC2::Instance"
     Properties: 
@@ -116,7 +118,7 @@ Resources:
       IamInstanceProfile: !Ref BastionInstanceProfile
       Tags:
         - Key: Name
-          Value: !Sub ${Environment}-Bastion
+          Value: !Sub ${Environment}-Server
         - Key: Environment
           Value: !Sub ${Environment}
             

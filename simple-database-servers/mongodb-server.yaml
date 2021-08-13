@@ -152,7 +152,7 @@ Resources:
       IamInstanceProfile: !Ref BastionInstanceProfile
       Tags:
         - Key: Name
-          Value: !Sub ${Environment}-Bastion
+          Value: !Sub ${Environment}-MongoDb
         - Key: Environment
           Value: !Sub ${Environment}
       UserData:
